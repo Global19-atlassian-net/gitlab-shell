@@ -11,6 +11,7 @@ import (
 	"gitlab.com/gitlab-org/gitlab-shell/internal/command/commandargs"
 	"gitlab.com/gitlab-org/gitlab-shell/internal/gitlabnet/accessverifier"
 	"gitlab.com/gitlab-org/gitlab-shell/internal/handler"
+	"gitlab.com/gitlab-org/labkit/correlation"
 )
 
 func (c *Command) performGitalyCall(response *accessverifier.Response) error {
@@ -33,6 +34,10 @@ func (c *Command) performGitalyCall(response *accessverifier.Response) error {
 		defer cancel()
 
 		gc.LogExecution(request.Repository, response, request.GitProtocol)
+
+		if response.CorrelationID != "" {
+			ctx = correlation.ContextWithCorrelation(ctx, response.CorrelationID)
+		}
 
 		rw := c.ReadWriter
 		return client.UploadPack(ctx, conn, rw.In, rw.Out, rw.ErrOut, request)

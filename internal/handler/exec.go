@@ -92,19 +92,20 @@ func getConn(gc *GitalyCommand) (*GitalyConn, error) {
 	}
 
 	connOpts := client.DefaultDialOpts
+	connOpts = append(connOpts, grpc.WithStreamInterceptor(
+		grpccorrelation.StreamClientCorrelationInterceptor(
+			grpccorrelation.WithClientName(executable.GitlabShell),
+		),
+	),
+		grpc.WithUnaryInterceptor(
+			grpccorrelation.UnaryClientCorrelationInterceptor(
+				grpccorrelation.WithClientName(executable.GitlabShell),
+			),
+		))
+
 	if gc.Token != "" {
-		connOpts = append(client.DefaultDialOpts,
+		connOpts = append(connOpts,
 			grpc.WithPerRPCCredentials(gitalyauth.RPCCredentialsV2(gc.Token)),
-			grpc.WithStreamInterceptor(
-				grpccorrelation.StreamClientCorrelationInterceptor(
-					grpccorrelation.WithClientName(executable.GitlabShell),
-				),
-			),
-			grpc.WithUnaryInterceptor(
-				grpccorrelation.UnaryClientCorrelationInterceptor(
-					grpccorrelation.WithClientName(executable.GitlabShell),
-				),
-			),
 		)
 	}
 
