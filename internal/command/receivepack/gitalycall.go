@@ -11,7 +11,6 @@ import (
 	"gitlab.com/gitlab-org/gitlab-shell/internal/command/commandargs"
 	"gitlab.com/gitlab-org/gitlab-shell/internal/command/shared/accessverifier"
 	"gitlab.com/gitlab-org/gitlab-shell/internal/handler"
-	"gitlab.com/gitlab-org/labkit/correlation"
 )
 
 func (c *Command) performGitalyCall(response *accessverifier.Response) error {
@@ -33,14 +32,8 @@ func (c *Command) performGitalyCall(response *accessverifier.Response) error {
 	}
 
 	return gc.RunGitalyCommand(func(ctx context.Context, conn *grpc.ClientConn) (int32, error) {
-		ctx, cancel := context.WithCancel(ctx)
+		ctx, cancel := gc.PrepareContext(ctx, request.Repository, response, request.GitProtocol)
 		defer cancel()
-
-		gc.LogExecution(request.Repository, response, request.GitProtocol)
-
-		if response.CorrelationID != "" {
-			ctx = correlation.ContextWithCorrelation(ctx, response.CorrelationID)
-		}
 
 		rw := c.ReadWriter
 		return client.ReceivePack(ctx, conn, rw.In, rw.Out, rw.ErrOut, request)

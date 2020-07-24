@@ -130,6 +130,7 @@ func testSuccessfulGet(t *testing.T, client *GitlabNetClient) {
 		assert.Contains(t, entries[0].Message, "method=GET")
 		assert.Contains(t, entries[0].Message, "status=200")
 		assert.Contains(t, entries[0].Message, "Finished HTTP request")
+		assert.Contains(t, entries[0].Message, "correlation_id=")
 	})
 }
 
